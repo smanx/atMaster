@@ -7,6 +7,7 @@
       <button @click="openADB">开启adb </button>
       <button @click="closeADB">关闭adb </button>
       <button @click="reboot">重启</button>
+      <button @click="reboot1869">重启(1869系列)</button>
     </div>
     <div class="content" v-show="isOpen">
       <div style="padding: 10px 0;">
@@ -40,6 +41,19 @@
         <button @click="submit">锁定频段</button>
       </div>
 
+      <div style="padding: 10px 0;">
+        <label>频点: </label>
+        <input style="width: 80px;" type="text" v-model="lteCell.arfcn">
+        <label style="margin-left: 20px;">小区: </label>
+        <input style="width: 80px;" type="text" v-model="lteCell.pci">
+        <label style="margin-left: 20px;">是否锁定: </label>
+        <input type="checkbox" v-model.number="lteCell.isLock" :value="true">
+        <button @click="write('AT+ZLC?')">读取</button>
+        <button @click="write(`AT+ZLC=${lteCell.isLock ? 1 : 0},${lteCell.arfcn},${lteCell.pci}`)">写入</button>
+        <div>
+          <label style="opacity: 0.5;">显示的仅为之前保存锁定小区的数据，并非是当前实际接入的小区</label>
+        </div>
+      </div>
       <!-- <van-button type="primary" :disabled="!isOpen || !checked.length">锁定频段</van-button> -->
       <div>
         <input type="text" v-model="dataW" placeholder="发送自定义AT指令">
@@ -72,7 +86,12 @@ export default {
       imei: '',
       mac: '',
       mac2: '',
-      ip: '192.168.0.1'
+      ip: '192.168.0.1',
+      lteCell: {
+        isLock: false,
+        arfcn: '',
+        cell: ''
+      }
     };
   },
   computed: {
@@ -114,11 +133,12 @@ export default {
             setTimeout(() => { this.write('AT+MAC?') }, 500)
             setTimeout(() => { this.write('AT+MAC2?') }, 1000)
             setTimeout(() => { this.getBand() }, 1500)
+            setTimeout(() => { this.write('AT+ZLC?') }, 200)
           }
         }
       } catch (error) {
         console.log('error', error)
-        error.message && alert(error.message)
+        error.message && !error.message.includes('No port selected by the user') && alert(error.message)
       }
 
     },
@@ -151,12 +171,12 @@ export default {
     },
     dataHandler(str) {
       let bandStr = 'ZLTEAMTBAND: '
-      if (str.includes(bandStr)) {
+      if (str.includes(bandStr) && str.includes(bandStr) && str.length > 20) {
         this.list = this.getSupportedBand(str.split(bandStr)[1].split('\r\n')[0])
         // console.log(this.list)
       }
       bandStr = '+ZLTEBAND: '
-      if (str.includes(bandStr)) {
+      if (str.includes(bandStr) && str.includes(bandStr) && str.length > 20) {
         let checked = this.getLockedBand(str.split(bandStr)[1].split('\r\n')[0])
         this.checked = checked
         // console.log('checked', checked)
@@ -172,6 +192,13 @@ export default {
       bandStr = '+MAC2:'
       if (str.includes(bandStr)) {
         this.mac2 = str.split(bandStr)[1].split('\r\n')[0]
+      }
+      bandStr = '+ZLC: '
+      if (str.includes(bandStr)) {
+        let arr = str.split(bandStr)[1].split('\r\n')[0].split(',')
+        this.lteCell.isLock = arr[0] === '1'
+        this.lteCell.arfcn = arr[1]
+        this.lteCell.pci = arr[2]
       }
 
     },
@@ -211,6 +238,9 @@ export default {
       // let res = await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=REBOOT_DEVICE`)
       // alert(res.statusText)
       window.open(`http://${this.ip}/goform/goform_set_cmd_process?goformId=REBOOT_DEVICE`)
+    },
+    reboot1869() {
+      window.open(`http://${this.ip}/reqproc/proc_post?isTest=false&goformId=REBOOT_DEVICE`)
     },
     async openADB() {
       // await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=2`)

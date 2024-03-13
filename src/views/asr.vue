@@ -125,7 +125,7 @@ export default {
         }
       } catch (error) {
         console.log('error', error)
-        error.message && alert(error.message)
+        error.message && !error.message.includes('No port selected by the user') && alert(error.message)
       }
 
     },
