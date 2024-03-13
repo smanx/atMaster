@@ -108,10 +108,10 @@ export default {
             this.write('AT*MRD_SN?')
             setTimeout(() => {
               this.write('AT*MRD_SN?')
-            }, 100)
+            }, 200)
             setTimeout(() => {
               this.getBand()
-            }, 200)
+            }, 400)
           }
         }
       } catch (error) {
@@ -141,7 +141,7 @@ export default {
       await writer.write(arr);
       setTimeout(() => {
         this.read()
-      }, 100);
+      }, 200);
     },
     dataHandler(str) {
       let bandStr = 'ZLTEAMTBAND: '
