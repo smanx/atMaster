@@ -6,6 +6,7 @@
         <button @click="write('AT*PROD=1')">工厂模式</button>
         <button @click="write('AT*PROD=0')">退出工厂模式</button>
       </div>
+      <label style="opacity: 0.5;">需开启工厂模式才能写号，写入之前先删除</label>
       <div style="padding: 10px 0;">
         <label>IMEI: </label>
         <input type="text" v-model="imei">
@@ -15,10 +16,17 @@
       </div>
       <div style="padding: 10px 0;">
         <label>SN: </label>
-        <input type="text" v-model="sn">
+        <input type="text" v-model="sn" placeholder="仅支持有SN号的设备">
         <button @click="write('AT*MRD_SN?')">读取</button>
         <button @click="write('AT*MRD_SN=D')">删除</button>
         <button @click="write('AT*MRD_SN=W,0,01JAN1970,' + sn)">写入</button>
+      </div>
+      <div style="padding: 10px 0;">
+        <label>MAC: </label>
+        <input type="text" v-model="mac">
+        <button @click="write('AT*MRD_WIFIID?')">读取</button>
+        <button @click="write('AT*MRD_WIFIID=D')">删除</button>
+        <button @click="write('AT*MRD_WIFIID=W,0,01JAN1970,' + mac)">写入</button>
       </div>
       <div>
         <button @click="write('AT+SWSIM=0')">切到卡1</button>
@@ -69,6 +77,7 @@ export default {
       checked: [],
       imei: '',
       sn: '',
+      mac: '',
       bandStr: '',
       ip: '192.168.0.1'
     };
@@ -109,13 +118,9 @@ export default {
             this.reader = this.port.readable.getReader();
             this.writer = this.port.writable.getWriter()
             this.write('AT+CGSN')
-            this.write('AT*MRD_SN?')
-            setTimeout(() => {
-              this.write('AT*MRD_SN?')
-            }, 200)
-            setTimeout(() => {
-              this.getBand()
-            }, 400)
+            setTimeout(() => { this.write('AT*MRD_SN?') }, 500)
+            setTimeout(() => { this.write('AT*MRD_WIFIID?') }, 1000)
+            setTimeout(() => { this.getBand() }, 1500)
           }
         }
       } catch (error) {
@@ -145,7 +150,7 @@ export default {
       await writer.write(arr);
       setTimeout(() => {
         this.read()
-      }, 200);
+      }, 500);
     },
     dataHandler(str) {
       let bandStr = 'ZLTEAMTBAND: '
@@ -187,6 +192,10 @@ export default {
       if (str.includes(bandStr)) {
         this.sn = str.split(bandStr)[1].split('\r\n')[0]
       }
+      bandStr = '*MRD_WIFIID: '
+      if (str.includes(bandStr)) {
+        this.mac = str.split(bandStr)[1].split('\r\n')[0].replaceAll(':', '')
+      }
     },
     submit() {
       let arr = []
@@ -207,8 +216,14 @@ export default {
       this.write(bandStr)
     },
   },
-  unmounted() {
+  async unmounted() {
     clearInterval(this.timer)
+    try {
+      this.reader.releaseLock()
+      this.writer.releaseLock()
+      await this.port.close()
+      this.reader = {}
+    } catch (error) { }
   },
   watch: {
     dataR() {

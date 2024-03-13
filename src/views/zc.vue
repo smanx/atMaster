@@ -15,6 +15,18 @@
         <button @click="write('AT+CGSN')">读取</button>
         <button @click="write('AT+MODIMEI=' + imei)">写入</button>
       </div>
+      <div style="padding: 10px 0;">
+        <label>无线MAC: </label>
+        <input type="text" v-model="mac">
+        <button @click="write('AT+MAC?')">读取</button>
+        <button @click="write('AT+MAC=' + mac)">写入</button>
+      </div>
+      <div style="padding: 10px 0;">
+        <label>有线MAC: </label>
+        <input type="text" v-model="mac2">
+        <button @click="write('AT+MAC2?')">读取</button>
+        <button @click="write('AT+MAC2=' + imei)">写入</button>
+      </div>
       <!-- <van-checkbox-group v-model="checked" direction="horizontal">
         <van-checkbox :name="item" v-for="(item, i) in list" :key="i">LTE B{{ item }}</van-checkbox>
       </van-checkbox-group> -->
@@ -58,6 +70,8 @@ export default {
       list: [],
       checked: [],
       imei: '',
+      mac: '',
+      mac2: '',
       ip: '192.168.0.1'
     };
   },
@@ -97,9 +111,9 @@ export default {
             this.reader = this.port.readable.getReader();
             this.writer = this.port.writable.getWriter()
             this.write('AT+CGSN')
-            setTimeout(() => {
-              this.getBand()
-            }, 200)
+            setTimeout(() => { this.write('AT+MAC?') }, 500)
+            setTimeout(() => { this.write('AT+MAC2?') }, 1000)
+            setTimeout(() => { this.getBand() }, 1500)
           }
         }
       } catch (error) {
@@ -133,7 +147,7 @@ export default {
       // console.log(Uint8ArrayToString(arr))
       setTimeout(() => {
         this.read()
-      }, 200);
+      }, 500);
     },
     dataHandler(str) {
       let bandStr = 'ZLTEAMTBAND: '
@@ -151,6 +165,15 @@ export default {
       if (str.includes(bandStr)) {
         this.imei = str.split(bandStr)[1].split('\r\n')[0]
       }
+      bandStr = '+MAC:'
+      if (str.includes(bandStr)) {
+        this.mac = str.split(bandStr)[1].split('\r\n')[0]
+      }
+      bandStr = '+MAC2:'
+      if (str.includes(bandStr)) {
+        this.mac2 = str.split(bandStr)[1].split('\r\n')[0]
+      }
+
     },
     getSupportedBand(str) {
       // console.log(str)
@@ -201,8 +224,14 @@ export default {
       window.open(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=0`)
     }
   },
-  unmounted() {
+  async unmounted() {
     clearInterval(this.timer)
+    try {
+      this.reader.releaseLock()
+      this.writer.releaseLock()
+      await this.port.close()
+      this.reader = {}
+    } catch (error) { }
   },
   watch: {
     dataR() {
