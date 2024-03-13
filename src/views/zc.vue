@@ -72,7 +72,7 @@ export default {
   methods: {
     async click() {
       if (!navigator.serial) {
-        alert('该浏览器不支持，仅支持基于chromium内核的浏览器')
+        alert('该浏览器不支持，仅支持基于chromium内核的pc浏览器')
         return;
       }
       try {
