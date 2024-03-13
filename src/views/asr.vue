@@ -1,5 +1,5 @@
 <template>
-  <div class="atTool" style="padding: 10px">
+  <div class="atMaster" style="padding: 10px">
     <button @click="click">选择端口 {{ isOpen ? '（已开启）' : '（未开启）' }}</button>
     <div class="content" v-show="isOpen">
       <div>
