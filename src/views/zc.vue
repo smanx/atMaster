@@ -181,17 +181,20 @@ export default {
       this.write('AT+ZLTEBAND='+ arr.join(','))
     },
     async reboot() {
-      let res = await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=REBOOT_DEVICE`)
-      alert(res.statusText)
+      // let res = await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=REBOOT_DEVICE`)
+      // alert(res.statusText)
+      window.open(`http://${this.ip}/goform/goform_set_cmd_process?goformId=REBOOT_DEVICE`)
     },
     async openADB() {
-      await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=2`)
-      await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=1`)
-      this.reboot()
+      // await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=2`)
+      // await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=1`)
+      // this.reboot()
+      window.open(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=1`)
     },
     async closeADB() {
-      await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=0`)
-      this.reboot()
+      // await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=0`)
+      // this.reboot()
+      window.open(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=0`)
     }
   },
   unmounted() {
