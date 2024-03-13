@@ -71,6 +71,10 @@ export default {
   },
   methods: {
     async click() {
+      if (!navigator.serial) {
+        alert('该浏览器不支持，仅支持基于chromium内核的pc浏览器')
+        return;
+      }
       try {
         if (this.port.getInfo && this.port.readable) {
           try {
@@ -176,9 +180,9 @@ export default {
             str = '0' + str
           }
         }
-        arr.push(parseInt(str,2))
+        arr.push(parseInt(str, 2))
       }
-      this.write('AT+ZLTEBAND='+ arr.join(','))
+      this.write('AT+ZLTEBAND=' + arr.join(','))
     },
     async reboot() {
       // let res = await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=REBOOT_DEVICE`)
