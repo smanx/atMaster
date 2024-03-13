@@ -73,8 +73,10 @@ export default {
     async click() {
       try {
         if (this.port.getInfo && this.port.readable) {
-          this.reader.releaseLock()
-          this.writer.releaseLock()
+          try {
+            this.reader.releaseLock()
+            this.writer.releaseLock()
+          } catch (error) { }
           await this.port.close()
           this.reader = {}
         } else {
@@ -98,6 +100,7 @@ export default {
         }
       } catch (error) {
         console.log('error', error)
+        error.message && alert(error.message)
       }
 
     },
@@ -120,6 +123,7 @@ export default {
       const writer = this.writer;
       let str = (atStr || this.dataW) + '\r\n'
       console.log('发送', str)
+      // this.dataR += str
       let arr = stringToUint8Array(str)
       await writer.write(arr);
       // console.log(Uint8ArrayToString(arr))
