@@ -108,7 +108,7 @@ export default {
       this.write('AT+ZLTEAMTBAND?')
       setTimeout(() => {
         this.write('AT+ZLTEBAND?')
-      }, 100)
+      }, 200)
     },
     async read() {
       const reader = this.reader
@@ -129,7 +129,7 @@ export default {
       // console.log(Uint8ArrayToString(arr))
       setTimeout(() => {
         this.read()
-      }, 100);
+      }, 200);
     },
     dataHandler(str) {
       let bandStr = 'ZLTEAMTBAND: '
