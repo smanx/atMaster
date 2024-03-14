@@ -11,6 +11,10 @@
     </div>
     <div class="content" v-show="isOpen">
       <div style="padding: 10px 0;">
+        <button @click="write('AT+ZMODE=1')">工厂模式</button>
+        <button @click="write('AT+ZMODE=0')">退出工厂模式</button>
+      </div>
+      <div style="padding: 10px 0;">
         <label>IMEI: </label>
         <input type="text" v-model="imei">
         <button @click="write('AT+CGSN')">读取</button>
