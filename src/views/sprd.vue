@@ -2,36 +2,20 @@
   <div class="atMaster" style="padding: 10px">
     <button @click="click">选择端口 {{ isOpen ? '（已开启）' : '（未开启）' }}</button>
     <div class="content" v-show="isOpen">
-      <div>
-        <button @click="write('AT*PROD=1')">工厂模式</button>
-        <button @click="write('AT*PROD=0')">退出工厂模式</button>
-      </div>
-      <label style="opacity: 0.5;">需开启工厂模式才能写号，写入之前先删除</label>
       <div style="padding: 10px 0;">
-        <label>IMEI: </label>
-        <input type="text" v-model="imei">
-        <button @click="write('AT+CGSN')">读取</button>
-        <button @click="write('AT*MRD_IMEI=D')">删除</button>
-        <button @click="write('AT*MRD_IMEI=W,0,01JAN1970,' + imei)">写入</button>
+        <label>IMEI1: </label>
+        <input type="text" v-model="imei1">
+        <button @click="readIMEI1()">读取</button>
+        <button @click='write(`AT+SPIMEI =0,"${imei1}"`)'>写入</button>
       </div>
       <div style="padding: 10px 0;">
-        <label>SN: </label>
-        <input type="text" v-model="sn" placeholder="仅支持有SN号的设备">
-        <button @click="write('AT*MRD_SN?')">读取</button>
-        <button @click="write('AT*MRD_SN=D')">删除</button>
-        <button @click="write('AT*MRD_SN=W,0,01JAN1970,' + sn)">写入</button>
-      </div>
-      <div style="padding: 10px 0;">
-        <label>MAC: </label>
-        <input type="text" v-model="mac">
-        <button @click="write('AT*MRD_WIFIID?')">读取</button>
-        <button @click="write('AT*MRD_WIFIID=D')">删除</button>
-        <button @click="write('AT*MRD_WIFIID=W,0,01JAN1970,' + mac)">写入</button>
+        <label>IMEI2: </label>
+        <input type="text" v-model="imei2">
+        <button @click="readIMEI2()">读取</button>
+        <button @click='write(`AT+SPIMEI =0,"${imei2}"`)'>写入</button>
       </div>
       <div>
-        <button @click="write('AT+SWSIM=0')">切到卡1</button>
-        <button @click="write('AT+SWSIM=1')">切到卡2</button>
-        <button @click="write('AT+RESET')">重启</button>
+        <button @click="write('AT+RESET=1')">重启</button>
       </div>
       <!-- <van-checkbox-group v-model="checked" direction="horizontal">
         <van-checkbox :name="item" v-for="(item, i) in list" :key="i">LTE B{{ item }}</van-checkbox>
@@ -76,6 +60,8 @@ export default {
       list: [1, 3, 5, 8, 38, 39, 40, 41],
       checked: [],
       imei: '',
+      imei1: '',
+      imei2: '',
       sn: '',
       mac: '',
       bandStr: '',
@@ -117,10 +103,10 @@ export default {
             });
             this.reader = this.port.readable.getReader();
             this.writer = this.port.writable.getWriter()
-            this.write('AT+CGSN')
-            setTimeout(() => { this.write('AT*MRD_SN?') }, 500)
-            setTimeout(() => { this.write('AT*MRD_WIFIID?') }, 1000)
-            setTimeout(() => { this.getBand() }, 1500)
+            this.readIMEI1()
+            setTimeout(() => { this.readIMEI2() }, 800)
+            setTimeout(() => { this.getBand() }, 800)
+
           }
         }
       } catch (error) {
@@ -130,7 +116,7 @@ export default {
 
     },
     getBand() {
-      this.write('AT*BAND?')
+      this.write('AT+SPLBAND=0')
     },
     async read() {
       const reader = this.reader
@@ -141,6 +127,16 @@ export default {
       this.dataR += str
       this.dataHandler(str)
     },
+    readIMEI1() {
+      this.imei = 1
+      this.write('AT+SPACTCARD=0')
+      this.write('AT+SPIMEI?')
+    },
+    readIMEI2() {
+      this.imei = 2
+      this.write('AT+SPACTCARD=1')
+      this.write('AT+SPIMEI?')
+    },
     async write(atStr) {
       const writer = this.writer;
       let str = (atStr || this.dataW) + '\r\n'
@@ -150,18 +146,31 @@ export default {
       await writer.write(arr);
       setTimeout(() => {
         this.read()
-      }, 500);
+      }, 300);
     },
     dataHandler(str) {
-      let bandStr = 'ZLTEAMTBAND: '
-      bandStr = '*BAND:'
-      if (str.includes(bandStr) && str.length > 20) {
-        this.bandStr = str.split(bandStr)[1].split('\r\n')[0]
+      let arr = str.split('\r\n')
+      if (arr.length >= 3) {
+        arr.forEach((item, i) => {
+          console.log(arr)
+          if (item.length === 15 && arr[i - 1] === '' && arr[i + 1] === '') {
+            if (this.imei === 1) {
+              this.imei1 = item
+            }
+            if (this.imei === 2) {
+              this.imei2 = item
+            }
+          }
+        })
+      }
+      let bandStr = '+SPLBAND: '
+      if (str.includes(bandStr)) {
         let arr = str.split(',')
-        let bandH = parseInt(arr[3]).toString(2).split('').reverse()
-        let bandL = parseInt(arr[4]).toString(2).split('').reverse()
+        let bandH = arr[1].toString(2)
+        let bandL = arr[3].toString(2)
         let checked = []
-        bandH.forEach((item, index) => {
+        checked.push(...this.getSupportedBand(bandL.toString(2)))
+        parseInt(bandH).toString(2).split('').reverse().forEach((item, index) => {
           if (item === '1') {
             if (index === 5) {
               checked.push(38)
@@ -177,20 +186,7 @@ export default {
             }
           }
         })
-        bandL.forEach((item, index) => {
-          if (item === '1' && [1, 3, 5, 8].includes(index + 1)) {
-            checked.push(index + 1)
-          }
-        })
         this.checked = checked
-      }
-      bandStr = '+CGSN: '
-      if (str.includes(bandStr)) {
-        this.imei = str.split(bandStr)[1].split('\r\n')[0]
-      }
-      bandStr = 'AT+CGSN\r\r\n'
-      if (str.includes(bandStr)) {
-        this.imei = str.split(bandStr)[1].split('\r\n')[0]
       }
       bandStr = '*MRD_SN:'
       if (str.includes(bandStr)) {
@@ -216,8 +212,20 @@ export default {
       let bandArr = this.bandStr.split(',')
       bandArr[3] = bandH
       bandArr[4] = bandL
-      let bandStr = `AT*BAND=${bandArr.join(',')}`
+      let bandStr = `AT+SPLBAND=1,0,${bandH},0,${bandL},0`
       this.write(bandStr)
+    },
+    getSupportedBand(str) {
+      // console.log(str)
+      return str.split(',').reduce((p, c, i) => {
+        let arrStr = parseInt(c).toString(2)
+        for (var j = 0; j < arrStr.length; j++) {
+          if (parseInt(arrStr[arrStr.length - j - 1])) {
+            p.push(i * 8 + j + 1)
+          }
+        }
+        return p
+      }, [])
     },
   },
   async unmounted() {

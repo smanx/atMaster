@@ -39,7 +39,7 @@
         <span v-for="(item, i) in list" :key="i"
           style="display: flex; flex-wrap: wrap; align-items: center; padding: 0 5px;">
           <label for="option1">LTE B{{ item }}</label>
-          <input type="checkbox" id="option1" name="options[]" v-model.number="checked" :value="item"><br><br>
+          <input type="checkbox" v-model.number="checked" :value="item"><br><br>
         </span>
         <button @click="getBand">读取频段</button>
         <button @click="submit">锁定频段</button>
@@ -164,7 +164,7 @@ export default {
     async write(atStr) {
       const writer = this.writer;
       let str = (atStr || this.dataW) + '\r\n'
-      console.log('发送', str)
+      // console.log('发送', str)
       // this.dataR += str
       let arr = stringToUint8Array(str)
       await writer.write(arr);
