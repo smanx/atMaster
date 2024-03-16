@@ -189,7 +189,7 @@ export default {
         this.imei = str.split(bandStr)[1].split('\r\n')[0]
       }
       bandStr = 'AT+CGSN\r\r\n'
-      if (str.includes(bandStr)) {
+      if (!str.includes('+CGSN: ') && str.includes(bandStr)) {
         this.imei = str.split(bandStr)[1].split('\r\n')[0]
       }
       bandStr = '*MRD_SN:'
