@@ -1,0 +1,48 @@
+name: GitHub Actions Build and Deploy Demo
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    
+    # - name: Install SSH Client 🔑
+    #   uses: webfactory/ssh-agent@v0.5.4 # This step installs the ssh client into the workflow run. There's many options available for this on the action marketplace.
+    #   with:
+    #     ssh-private-key: ${{ secrets.AUTHINE_KEY }}
+
+    - name: Checkout
+      uses: actions/checkout@main
+      
+    - name: Install and Build 🔧
+      run: |
+        yarn
+        yarn build
+
+    - name: Deploy gh-pages 🚀
+      uses: JamesIves/github-pages-deploy-action@4.1.7
+      with:
+        ssh-key: ${{ secrets.AUTHINE_KEY }}
+        branch: gh-pages # The branch the action should deploy to.
+        folder: dist 
+      
+    - name: Deploy app 🚀
+      uses: JamesIves/github-pages-deploy-action@4.1.7
+      with:
+        ssh-key: ${{ secrets.AUTHINE_KEY }}
+        branch: master # The branch the action should deploy to.
+        folder: dist # The folder the action should deploy.
+        repository-name: smanx/app #允许您指定其他存储库路径
+        target-folder: atmaster #如果要将部署文件夹的内容推送到部署分支上的特定目录中，可以在此处指定
+        clean: true #每次部署时自动将其从Deployment分支中删除
+        # single-commit: true #如果您希望在部署分支上进行一次提交而不是保留完整的历史记录
+        
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2.3.1
+      with:
+        # Artifact name
+        name: package
+        # A file, directory or wildcard pattern that describes what to upload
+        path: dist
