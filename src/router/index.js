@@ -29,6 +29,11 @@ const router = createRouter({
       component: () => import('../views/sprd.vue')
     },
     {
+      path: '/test',
+      name: 'test',
+      component: () => import('../views/test.vue')
+    },
+    {
       path: '/',
       name: 'home',
       component: HomeView
