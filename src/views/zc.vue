@@ -45,6 +45,7 @@
         </span>
         <button @click="getBand">读取频段</button>
         <button @click="submit">锁定频段</button>
+        <button @click="resetNetWork">重启网络</button>
       </div>
 
       <div style="padding: 10px 0;">
@@ -239,6 +240,12 @@ export default {
         arr.push(parseInt(str, 2))
       }
       this.write('AT+ZLTEBAND=' + arr.join(','))
+    },
+    resetNetWork() {
+      this.write('AT+CFUN=4')
+      setTimeout(() => {
+        this.write('AT+CFUN=1')
+      }, 5000)
     },
     async reboot() {
       // let res = await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=REBOOT_DEVICE`)
