@@ -6,8 +6,10 @@
       <input type="text" v-model="ip">
       <button @click="openADB">开启adb </button>
       <button @click="closeADB">关闭adb </button>
+      <button @click="openADB2">开启adb2 </button>
+      <button @click="closeADB2">关闭adb2 </button>
       <button @click="reboot">重启</button>
-      <button @click="reboot1869">重启(1869系列)</button>
+      <button @click="reboot1869">重启2</button>
     </div>
     <div class="content" v-show="isOpen">
       <div style="padding: 10px 0;">
@@ -256,7 +258,13 @@ export default {
       // await fetch(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=0`)
       // this.reboot()
       window.open(`http://${this.ip}/goform/goform_set_cmd_process?goformId=SET_DEVICE_MODE&debug_enable=0`)
-    }
+    },
+    async openADB2() {
+      window.open(`http://${this.ip}/reqproc/proc_post?goformId=SET_DEVICE_MODE&debug_enable=1`)
+    },
+    async closeADB2() {
+      window.open(`http://${this.ip}/reqproc/proc_post?goformId=SET_DEVICE_MODE&debug_enable=0`)
+    },
   },
   async unmounted() {
     clearInterval(this.timer)
