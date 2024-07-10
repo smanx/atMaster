@@ -12,7 +12,7 @@
         <label>IMEI2: </label>
         <input type="text" v-model="imei2">
         <button @click="readIMEI2()">读取</button>
-        <button @click='write(`AT+SPIMEI =0,"${imei2}"`)'>写入</button>
+        <button @click='write(`AT+SPIMEI =1,"${imei2}"`)'>写入</button>
       </div>
       <div>
         <button @click="write('AT+RESET=1')">重启</button>
