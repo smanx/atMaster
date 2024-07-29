@@ -44,6 +44,7 @@
         </span>
         <button @click="getBand">读取频段</button>
         <button @click="submit">锁定频段</button>
+        <span style="opacity: 0.5;">显示的频段不一定支持，能成功锁定的频段才算是支持</span>
       </div>
 
       <!-- <van-button type="primary" :disabled="!isOpen || !checked.length">锁定频段</van-button> -->
