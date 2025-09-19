@@ -1,47 +1,95 @@
 <template>
-  <div class="atMaster" style="padding: 10px">
-    <button @click="click">选择端口 {{ isOpen ? '（已开启）' : '（未开启）' }}</button>
-    <div class="content" v-show="isOpen">
+  <div
+    class="atMaster"
+    style="padding: 10px"
+  >
+    <button @click="click">
+      选择端口 {{ isOpen ? '（已开启）' : '（未开启）' }}
+    </button>
+    <div
+      v-show="isOpen"
+      class="content"
+    >
       <div style="padding: 10px 0;">
         <label>IMEI1: </label>
-        <input type="text" v-model="imei1">
-        <button @click="readIMEI1()">读取</button>
-        <button @click='write(`AT+SPIMEI =0,"${imei1}"`)'>写入</button>
+        <input
+          v-model="imei1"
+          type="text"
+        >
+        <button @click="readIMEI1()">
+          读取
+        </button>
+        <button @click="write(`AT+SPIMEI =0,&quot;${imei1}&quot;`)">
+          写入
+        </button>
       </div>
       <div style="padding: 10px 0;">
         <label>IMEI2: </label>
-        <input type="text" v-model="imei2">
-        <button @click="readIMEI2()">读取</button>
-        <button @click='write(`AT+SPIMEI =1,"${imei2}"`)'>写入</button>
+        <input
+          v-model="imei2"
+          type="text"
+        >
+        <button @click="readIMEI2()">
+          读取
+        </button>
+        <button @click="write(`AT+SPIMEI =1,&quot;${imei2}&quot;`)">
+          写入
+        </button>
       </div>
       <div>
-        <button @click="write('AT+RESET=1')">重启</button>
+        <button @click="write('AT+RESET=1')">
+          重启
+        </button>
       </div>
       <!-- <van-checkbox-group v-model="checked" direction="horizontal">
         <van-checkbox :name="item" v-for="(item, i) in list" :key="i">LTE B{{ item }}</van-checkbox>
       </van-checkbox-group> -->
       <div style="display: flex; flex-wrap: wrap; align-items: center; padding: 10px 0;">
-        <span v-for="(item, i) in list" :key="i"
-          style="display: flex; flex-wrap: wrap; align-items: center; padding: 0 5px;">
+        <span
+          v-for="(item, i) in list"
+          :key="i"
+          style="display: flex; flex-wrap: wrap; align-items: center; padding: 0 5px;"
+        >
           <label for="option1">LTE B{{ item }}</label>
-          <input type="checkbox" v-model.number="checked" :value="item"><br><br>
+          <input
+            v-model.number="checked"
+            type="checkbox"
+            :value="item"
+          ><br><br>
         </span>
-        <button @click="getBand">读取频段</button>
-        <button @click="submit">锁定频段</button>
+        <button @click="getBand">
+          读取频段
+        </button>
+        <button @click="submit">
+          锁定频段
+        </button>
       </div>
 
       <!-- <van-button type="primary" :disabled="!isOpen || !checked.length">锁定频段</van-button> -->
       <div>
-        <input type="text" v-model="dataW" placeholder="发送自定义AT指令">
-        <button @click="write()">发送</button>
+        <input
+          v-model="dataW"
+          type="text"
+          placeholder="发送自定义AT指令"
+        >
+        <button @click="write()">
+          发送
+        </button>
       </div>
       <div class="right">
-        <textarea id="scroll_text" cols="30" rows="10" v-model="dataR" readonly=""></textarea>
-        <button @click="dataR = ''">清理</button>
+        <textarea
+          id="scroll_text"
+          v-model="dataR"
+          cols="30"
+          rows="10"
+          readonly=""
+        />
+        <button @click="dataR = ''">
+          清理
+        </button>
       </div>
     </div>
   </div>
-
 </template>
 
 <script>
@@ -66,9 +114,17 @@ export default {
       mac: '',
       bandStr: '',
       ip: '192.168.0.1'
-    };
+    }
   },
   computed: {
+  },
+  watch: {
+    dataR() {
+      this.$nextTick(() => {
+        const textarea = document.getElementById('scroll_text')
+        textarea.scrollTop = textarea.scrollHeight
+      })
+    }
   },
   created() {
     window.that = this
@@ -76,11 +132,20 @@ export default {
       this.isOpen = !!this.port.readable
     }, 100)
   },
+  async unmounted() {
+    clearInterval(this.timer)
+    try {
+      this.reader.releaseLock()
+      this.writer.releaseLock()
+      await this.port.close()
+      this.reader = {}
+    } catch (error) { }
+  },
   methods: {
     async click() {
       if (!navigator.serial) {
         alert('该浏览器不支持，仅支持基于chromium内核的pc浏览器')
-        return;
+        return
       }
       try {
         if (this.port.getInfo && this.port.readable) {
@@ -91,17 +156,17 @@ export default {
           await this.port.close()
           this.reader = {}
         } else {
-          const port = await navigator.serial.requestPort();
+          const port = await navigator.serial.requestPort()
           this.port = port
           if (!this.port.readable) {
             // 打开串口
             await port.open({
               dataBits: 8, // 数据位
               stopBits: 1, // 停止位
-              parity: "none", // 奇偶校验
-              baudRate: 9600, // 波特率
-            });
-            this.reader = this.port.readable.getReader();
+              parity: 'none', // 奇偶校验
+              baudRate: 9600 // 波特率
+            })
+            this.reader = this.port.readable.getReader()
             this.writer = this.port.writable.getWriter()
             this.readIMEI1()
             setTimeout(() => { this.readIMEI2() }, 800)
@@ -121,7 +186,7 @@ export default {
     async read() {
       const reader = this.reader
       // 监听来自串口的数据
-      const { value, done } = await reader.read();
+      const { value, done } = await reader.read()
       let str = Uint8ArrayToString(value)
       console.log('接收', str)
       this.dataR += str
@@ -138,15 +203,15 @@ export default {
       this.write('AT+SPIMEI?')
     },
     async write(atStr) {
-      const writer = this.writer;
+      const writer = this.writer
       let str = (atStr || this.dataW) + '\r\n'
       // this.dataR += str
       // console.log('发送', str)
       let arr = stringToUint8Array(str)
-      await writer.write(arr);
+      await writer.write(arr)
       setTimeout(() => {
         this.read()
-      }, 300);
+      }, 300)
     },
     dataHandler(str) {
       let arr = str.split('\r\n')
@@ -226,30 +291,13 @@ export default {
         }
         return p
       }, [])
-    },
-  },
-  async unmounted() {
-    clearInterval(this.timer)
-    try {
-      this.reader.releaseLock()
-      this.writer.releaseLock()
-      await this.port.close()
-      this.reader = {}
-    } catch (error) { }
-  },
-  watch: {
-    dataR() {
-      this.$nextTick(() => {
-        const textarea = document.getElementById('scroll_text');
-        textarea.scrollTop = textarea.scrollHeight;
-      })
     }
   }
-};
+}
 function Uint8ArrayToString(fileData) {
-  var dataString = "";
+  var dataString = ''
   for (var i = 0; i < fileData.length; i++) {
-    dataString += String.fromCharCode(fileData[i]);
+    dataString += String.fromCharCode(fileData[i])
   }
 
   return dataString
@@ -257,12 +305,12 @@ function Uint8ArrayToString(fileData) {
 }
 
 function stringToUint8Array(str) {
-  var arr = [];
+  var arr = []
   for (var i = 0; i < str.length; i++) {
-    arr.push(str.charCodeAt(i));
+    arr.push(str.charCodeAt(i))
   }
 
-  var tmpUint8Array = new Uint8Array(arr);
+  var tmpUint8Array = new Uint8Array(arr)
   return tmpUint8Array
 }
 </script>

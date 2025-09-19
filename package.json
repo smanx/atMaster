@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --ignore-path .gitignore",
+    "format:check": "prettier --check src/"
   },
   "dependencies": {
     "vue": "^3.4.21",
@@ -16,6 +20,9 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "vite": "^5.1.5",
     "vite-plugin-vue-devtools": "^7.0.16",
-    "vite-plugin-pwa": "^0.19.2"
+    "vite-plugin-pwa": "^0.19.2",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.27.0",
+    "prettier": "^3.3.3"
   }
 }
